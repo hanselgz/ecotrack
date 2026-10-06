@@ -8,7 +8,7 @@ export const CategoriaReporteService = {
   getById: async (id: number) => {
     const categoria = await CategoriaReporteModel.getById(id);
     if (!categoria) {
-      const error: any = new Error('Categoría de reporte no encontrada');
+      const error: any = new Error('Categoria de reporte no encontrada');
       error.statusCode = 404;
       throw error;
     }
@@ -17,7 +17,7 @@ export const CategoriaReporteService = {
 
   create: async (data: CategoriaReporte) => {
     if (!data.nombre || data.nombre.trim() === '') {
-      const error: any = new Error('El nombre de la categoría es obligatorio');
+      const error: any = new Error('El nombre de la categoria es obligatorio');
       error.statusCode = 400;
       throw error;
     }

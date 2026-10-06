@@ -5,6 +5,7 @@ import pool from './config/db';
 import { sendSuccess } from './utils/response';
 import { errorHandler } from './middlewares/errorHandler';
 import categoriaRoutes from './routes/categoriaReporte.routes';
+import recomendacionRoutes from './routes/recomendacion.routes';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.get('/api/health', async (req, res, next) => {
 });
 
 app.use('/api/categories', categoriaRoutes);
+app.use('/api/recommendations', recomendacionRoutes);
 
 app.use(errorHandler);
 

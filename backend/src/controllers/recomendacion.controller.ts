@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { CategoriaReporteService } from '../services/categoriaReporte.service';
+import { RecomendacionService } from '../services/recomendacion.service';
 import { sendSuccess } from '../utils/response';
 
-export const CategoriaReporteController = {
+export const RecomendacionController = {
   getAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const categorias = await CategoriaReporteService.getAll();
-      return sendSuccess(res, 'Categorias obtenidas correctamente', categorias);
+      const recomendaciones = await RecomendacionService.getAll();
+      return sendSuccess(res, 'Recomendaciones obtenidas correctamente', recomendaciones);
     } catch (error) {
       next(error);
     }
@@ -15,8 +15,8 @@ export const CategoriaReporteController = {
   getById: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = Number(req.params.id);
-      const categoria = await CategoriaReporteService.getById(id);
-      return sendSuccess(res, 'Categoria obtenida correctamente', categoria);
+      const recomendacion = await RecomendacionService.getById(id);
+      return sendSuccess(res, 'Recomendación obtenida correctamente', recomendacion);
     } catch (error) {
       next(error);
     }
@@ -24,8 +24,8 @@ export const CategoriaReporteController = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const nuevaCategoria = await CategoriaReporteService.create(req.body);
-      return sendSuccess(res, 'Categoria creada correctamente', nuevaCategoria, 201);
+      const nueva = await RecomendacionService.create(req.body);
+      return sendSuccess(res, 'Recomendación creada correctamente', nueva, 201);
     } catch (error) {
       next(error);
     }
@@ -34,8 +34,8 @@ export const CategoriaReporteController = {
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = Number(req.params.id);
-      const categoriaActualizada = await CategoriaReporteService.update(id, req.body);
-      return sendSuccess(res, 'Categoria actualizada correctamente', categoriaActualizada);
+      const actualizada = await RecomendacionService.update(id, req.body);
+      return sendSuccess(res, 'Recomendación actualizada correctamente', actualizada);
     } catch (error) {
       next(error);
     }
@@ -44,8 +44,8 @@ export const CategoriaReporteController = {
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = Number(req.params.id);
-      await CategoriaReporteService.delete(id);
-      return sendSuccess(res, 'Categoria eliminada correctamente', null);
+      await RecomendacionService.delete(id);
+      return sendSuccess(res, 'Recomendación eliminada correctamente', null);
     } catch (error) {
       next(error);
     }
