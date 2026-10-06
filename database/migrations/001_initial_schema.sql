@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   fecha_registro TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Tabla: Categorías de Reporte
+-- 3. Tabla: Categorï¿½as de Reporte
 CREATE TABLE IF NOT EXISTS categorias_reporte (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL UNIQUE,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS categorias_reporte (
   icono VARCHAR(50)
 );
 
--- 4. Tabla: Ubicaciones (SQL Estándar con Coordenadas Lat/Lng)
+-- 4. Tabla: Ubicaciones (SQL Estï¿½ndar con Coordenadas Lat/Lng)
 CREATE TABLE IF NOT EXISTS ubicaciones (
   id SERIAL PRIMARY KEY,
   departamento VARCHAR(100) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS reportes_ambientales (
   titulo VARCHAR(150) NOT NULL,
   descripcion TEXT NOT NULL,
   fotografia VARCHAR(255),
-  estado VARCHAR(30) DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En revisión', 'Verificado', 'Resuelto', 'Rechazado')),
+  estado VARCHAR(30) DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En revisiï¿½n', 'Verificado', 'Resuelto', 'Rechazado')),
   usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   categoria_id INT NOT NULL REFERENCES categorias_reporte(id) ON DELETE RESTRICT,
   ubicacion_id INT NOT NULL REFERENCES ubicaciones(id) ON DELETE CASCADE,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS recomendaciones (
   id SERIAL PRIMARY KEY,
   titulo VARCHAR(150) NOT NULL,
   descripcion TEXT NOT NULL,
-  categoria_impacto VARCHAR(50) NOT NULL CHECK (categoria_impacto IN ('Transporte', 'Energía', 'Agua', 'Residuos', 'General')),
+  categoria_impacto VARCHAR(50) NOT NULL CHECK (categoria_impacto IN ('Transporte', 'Energï¿½a', 'Agua', 'Residuos', 'General')),
   accion_sugerida TEXT NOT NULL
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS notificaciones (
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices B-Tree Estándar
+-- Indices B-Tree Estandar
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_reportes_usuario ON reportes_ambientales(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_reportes_categoria ON reportes_ambientales(categoria_id);
