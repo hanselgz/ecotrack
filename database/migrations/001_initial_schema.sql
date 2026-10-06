@@ -1,6 +1,3 @@
--- Habilitar extensión PostGIS para coordenadas geográficas
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 -- 1. Tabla: Roles
 CREATE TABLE IF NOT EXISTS roles (
   id SERIAL PRIMARY KEY,
@@ -27,7 +24,7 @@ CREATE TABLE IF NOT EXISTS categorias_reporte (
   icono VARCHAR(50)
 );
 
--- 4. Tabla: Ubicaciones
+-- 4. Tabla: Ubicaciones (SQL Estándar con Coordenadas Lat/Lng)
 CREATE TABLE IF NOT EXISTS ubicaciones (
   id SERIAL PRIMARY KEY,
   departamento VARCHAR(100) NOT NULL,
@@ -35,8 +32,7 @@ CREATE TABLE IF NOT EXISTS ubicaciones (
   direccion TEXT,
   referencia TEXT,
   latitud NUMERIC(10, 8) NOT NULL,
-  longitud NUMERIC(11, 8) NOT NULL,
-  geom GEOMETRY(Point, 4326)
+  longitud NUMERIC(11, 8) NOT NULL
 );
 
 -- 5. Tabla: Reportes Ambientales
@@ -86,10 +82,10 @@ CREATE TABLE IF NOT EXISTS notificaciones (
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Creación de Índices para optimizar búsquedas frecuentes
+-- Índices B-Tree Estándar
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_reportes_usuario ON reportes_ambientales(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_reportes_categoria ON reportes_ambientales(categoria_id);
 CREATE INDEX IF NOT EXISTS idx_reportes_estado ON reportes_ambientales(estado);
-CREATE INDEX IF NOT EXISTS idx_ubicaciones_geom ON ubicaciones USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_ubicaciones_coords ON ubicaciones(latitud, longitud);
 CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON notificaciones(usuario_id, leida);
