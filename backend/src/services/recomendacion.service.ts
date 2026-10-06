@@ -8,7 +8,7 @@ export const RecomendacionService = {
   getById: async (id: number) => {
     const recomendacion = await RecomendacionModel.getById(id);
     if (!recomendacion) {
-      const error: any = new Error('Recomendación no encontrada');
+      const error: any = new Error('Recomendacion no encontrada');
       error.statusCode = 404;
       throw error;
     }

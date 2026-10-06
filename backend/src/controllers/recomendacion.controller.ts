@@ -16,7 +16,7 @@ export const RecomendacionController = {
     try {
       const id = Number(req.params.id);
       const recomendacion = await RecomendacionService.getById(id);
-      return sendSuccess(res, 'Recomendación obtenida correctamente', recomendacion);
+      return sendSuccess(res, 'Recomendacion obtenida correctamente', recomendacion);
     } catch (error) {
       next(error);
     }
@@ -25,7 +25,7 @@ export const RecomendacionController = {
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const nueva = await RecomendacionService.create(req.body);
-      return sendSuccess(res, 'Recomendación creada correctamente', nueva, 201);
+      return sendSuccess(res, 'Recomendacion creada correctamente', nueva, 201);
     } catch (error) {
       next(error);
     }
@@ -35,7 +35,7 @@ export const RecomendacionController = {
     try {
       const id = Number(req.params.id);
       const actualizada = await RecomendacionService.update(id, req.body);
-      return sendSuccess(res, 'Recomendación actualizada correctamente', actualizada);
+      return sendSuccess(res, 'Recomendacion actualizada correctamente', actualizada);
     } catch (error) {
       next(error);
     }
@@ -45,7 +45,7 @@ export const RecomendacionController = {
     try {
       const id = Number(req.params.id);
       await RecomendacionService.delete(id);
-      return sendSuccess(res, 'Recomendación eliminada correctamente', null);
+      return sendSuccess(res, 'Recomendacion eliminada correctamente', null);
     } catch (error) {
       next(error);
     }
