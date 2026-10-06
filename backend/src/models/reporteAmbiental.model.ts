@@ -21,37 +21,35 @@ export interface ReporteAmbientalInput {
 
 export const ReporteAmbientalModel = {
   getAll: async () => {
-    const query = \
-      SELECT 
-        r.id, r.titulo, r.descripcion, r.fotografia, r.estado, 
-        r.fecha_creacion, r.fecha_actualizacion,
-        c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono,
-        u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email,
-        ub.id AS ubicacion_id, ub.departamento, ub.municipio, ub.direccion, ub.referencia, ub.latitud, ub.longitud
-      FROM reportes_ambientales r
-      INNER JOIN categorias_reporte c ON r.categoria_id = c.id
-      INNER JOIN usuarios u ON r.usuario_id = u.id
-      INNER JOIN ubicaciones ub ON r.ubicacion_id = ub.id
-      ORDER BY r.fecha_creacion DESC
-    \;
+    const query = 'SELECT ' +
+      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, ' +
+      'r.fecha_creacion, r.fecha_actualizacion, ' +
+      'c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono, ' +
+      'u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email, ' +
+      'ub.id AS ubicacion_id, ub.departamento, ub.municipio, ub.direccion, ub.referencia, ub.latitud, ub.longitud ' +
+      'FROM reportes_ambientales r ' +
+      'INNER JOIN categorias_reporte c ON r.categoria_id = c.id ' +
+      'INNER JOIN usuarios u ON r.usuario_id = u.id ' +
+      'INNER JOIN ubicaciones ub ON r.ubicacion_id = ub.id ' +
+      'ORDER BY r.fecha_creacion DESC';
+
     const [rows]: any = await pool.query(query);
     return rows;
   },
 
   getById: async (id: number) => {
-    const query = \
-      SELECT 
-        r.id, r.titulo, r.descripcion, r.fotografia, r.estado, 
-        r.fecha_creacion, r.fecha_actualizacion,
-        c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono,
-        u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email,
-        ub.id AS ubicacion_id, ub.departamento, ub.municipio, ub.direccion, ub.referencia, ub.latitud, ub.longitud
-      FROM reportes_ambientales r
-      INNER JOIN categorias_reporte c ON r.categoria_id = c.id
-      INNER JOIN usuarios u ON r.usuario_id = u.id
-      INNER JOIN ubicaciones ub ON r.ubicacion_id = ub.id
-      WHERE r.id = ?
-    \;
+    const query = 'SELECT ' +
+      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, ' +
+      'r.fecha_creacion, r.fecha_actualizacion, ' +
+      'c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono, ' +
+      'u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email, ' +
+      'ub.id AS ubicacion_id, ub.departamento, ub.municipio, ub.direccion, ub.referencia, ub.latitud, ub.longitud ' +
+      'FROM reportes_ambientales r ' +
+      'INNER JOIN categorias_reporte c ON r.categoria_id = c.id ' +
+      'INNER JOIN usuarios u ON r.usuario_id = u.id ' +
+      'INNER JOIN ubicaciones ub ON r.ubicacion_id = ub.id ' +
+      'WHERE r.id = ?';
+
     const [rows]: any = await pool.query(query, [id]);
     if (rows.length === 0) return null;
     return rows[0];

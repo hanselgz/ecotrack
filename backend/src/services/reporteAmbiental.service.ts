@@ -25,7 +25,7 @@ export const ReporteAmbientalService = {
     }
 
     if (!ubicacion.departamento || !ubicacion.municipio || ubicacion.latitud === undefined || ubicacion.longitud === undefined) {
-      const error: any = new Error('La ubicación debe contener departamento, municipio, latitud y longitud');
+      const error: any = new Error('La ubicacion debe contener departamento, municipio, latitud y longitud');
       error.statusCode = 400;
       throw error;
     }
@@ -34,9 +34,9 @@ export const ReporteAmbientalService = {
   },
 
   updateStatus: async (id: number, estado: string) => {
-    const estadosValidos = ['Pendiente', 'En revisión', 'Verificado', 'Resuelto', 'Rechazado'];
+    const estadosValidos = ['Pendiente', 'En revision', 'Verificado', 'Resuelto', 'Rechazado'];
     if (!estadosValidos.includes(estado)) {
-      const error: any = new Error('Estado no válido');
+      const error: any = new Error('Estado no volido');
       error.statusCode = 400;
       throw error;
     }

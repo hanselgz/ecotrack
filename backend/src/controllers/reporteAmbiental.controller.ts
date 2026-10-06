@@ -34,7 +34,14 @@ export const ReporteAmbientalController = {
   updateStatus: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = Number(req.params.id);
-      const { estado } = req.body;
+      const { estado } = req.body || {};
+      
+      if (!estado) {
+        const error: any = new Error('El campo "estado" es obligatorio en el cuerpo de la petición');
+        error.statusCode = 400;
+        throw error;
+      }
+
       const actualizado = await ReporteAmbientalService.updateStatus(id, estado);
       return sendSuccess(res, 'Estado del reporte actualizado correctamente', actualizado);
     } catch (error) {

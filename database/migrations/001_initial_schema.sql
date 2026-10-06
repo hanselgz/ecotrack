@@ -1,91 +1,109 @@
--- 1. Tabla: Roles
-CREATE TABLE IF NOT EXISTS roles (
-  id SERIAL PRIMARY KEY,
-  nombre VARCHAR(20) NOT NULL UNIQUE
+use ecotrack_db_in5bm;
+
+-- 1. tabla: roles
+create table if not exists roles (
+  id int auto_increment primary key,
+  nombre varchar(20) not null unique
 );
 
--- 2. Tabla: Usuarios
-CREATE TABLE IF NOT EXISTS usuarios (
-  id SERIAL PRIMARY KEY,
-  nombre VARCHAR(100) NOT NULL,
-  apellido VARCHAR(100) NOT NULL,
-  email VARCHAR(150) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  rol_id INT NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
-  puntuacion_ambiental INT DEFAULT 0,
-  fecha_registro TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- 2. tabla: usuarios
+create table if not exists usuarios (
+  id int auto_increment primary key,
+  nombre varchar(100) not null,
+  apellido varchar(100) not null,
+  email varchar(150) not null unique,
+  password_hash varchar(255) not null,
+  rol_id int not null,
+  puntuacion_ambiental int default 0,
+  fecha_registro timestamp default current_timestamp,
+  foreign key (rol_id) references roles(id) on delete restrict,
+  index idx_usuarios_email (email)
 );
 
--- 3. Tabla: Categor�as de Reporte
-CREATE TABLE IF NOT EXISTS categorias_reporte (
-  id SERIAL PRIMARY KEY,
-  nombre VARCHAR(50) NOT NULL UNIQUE,
-  descripcion TEXT,
-  icono VARCHAR(50)
+-- 3. tabla: categorias de reporte
+create table if not exists categorias_reporte (
+  id int auto_increment primary key,
+  nombre varchar(50) not null unique,
+  descripcion text,
+  icono varchar(50)
 );
 
--- 4. Tabla: Ubicaciones (SQL Est�ndar con Coordenadas Lat/Lng)
-CREATE TABLE IF NOT EXISTS ubicaciones (
-  id SERIAL PRIMARY KEY,
-  departamento VARCHAR(100) NOT NULL,
-  municipio VARCHAR(100) NOT NULL,
-  direccion TEXT,
-  referencia TEXT,
-  latitud NUMERIC(10, 8) NOT NULL,
-  longitud NUMERIC(11, 8) NOT NULL
+-- 4. tabla: ubicaciones
+create table if not exists ubicaciones (
+  id int auto_increment primary key,
+  departamento varchar(100) not null,
+  municipio varchar(100) not null,
+  direccion text,
+  referencia text,
+  latitud decimal(10, 8) not null,
+  longitud decimal(11, 8) not null,
+  index idx_ubicaciones_coords (latitud, longitud)
 );
 
--- 5. Tabla: Reportes Ambientales
-CREATE TABLE IF NOT EXISTS reportes_ambientales (
-  id SERIAL PRIMARY KEY,
-  titulo VARCHAR(150) NOT NULL,
-  descripcion TEXT NOT NULL,
-  fotografia VARCHAR(255),
-  estado VARCHAR(30) DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En revisi�n', 'Verificado', 'Resuelto', 'Rechazado')),
-  usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  categoria_id INT NOT NULL REFERENCES categorias_reporte(id) ON DELETE RESTRICT,
-  ubicacion_id INT NOT NULL REFERENCES ubicaciones(id) ON DELETE CASCADE,
-  fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  fecha_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- 5. tabla: reportes ambientales
+create table if not exists reportes_ambientales (
+  id int auto_increment primary key,
+  titulo varchar(150) not null,
+  descripcion text not null,
+  fotografia varchar(255),
+  estado enum(
+    'pendiente',
+    'en revision',
+    'verificado',
+    'resuelto',
+    'rechazado'
+  ) default 'pendiente',
+  usuario_id int not null,
+  categoria_id int not null,
+  ubicacion_id int not null,
+  fecha_creacion timestamp default current_timestamp,
+  fecha_actualizacion timestamp default current_timestamp on update current_timestamp,
+  foreign key (usuario_id) references usuarios(id) on delete cascade,
+  foreign key (categoria_id) references categorias_reporte(id) on delete restrict,
+  foreign key (ubicacion_id) references ubicaciones(id) on delete cascade,
+  index idx_reportes_usuario (usuario_id),
+  index idx_reportes_categoria (categoria_id),
+  index idx_reportes_estado (estado)
 );
 
--- 6. Tabla: Evaluaciones de Impacto
-CREATE TABLE IF NOT EXISTS evaluaciones_impacto (
-  id SERIAL PRIMARY KEY,
-  usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  transporte_tipo VARCHAR(50) NOT NULL,
-  transporte_distancia NUMERIC(8, 2) NOT NULL,
-  energia_kwh NUMERIC(8, 2) NOT NULL,
-  agua_litros NUMERIC(8, 2) NOT NULL,
-  residuos_kg NUMERIC(8, 2) NOT NULL,
-  huella_carbono_kg NUMERIC(8, 2) NOT NULL,
-  puntuacion_calculada INT NOT NULL,
-  fecha_evaluacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- 6. tabla: evaluaciones de impacto
+create table if not exists evaluaciones_impacto (
+  id int auto_increment primary key,
+  usuario_id int not null,
+  transporte_tipo varchar(50) not null,
+  transporte_distancia decimal(8, 2) not null,
+  energia_kwh decimal(8, 2) not null,
+  agua_litros decimal(8, 2) not null,
+  residuos_kg decimal(8, 2) not null,
+  huella_carbono_kg decimal(8, 2) not null,
+  puntuacion_calculada int not null,
+  fecha_evaluacion timestamp default current_timestamp,
+  foreign key (usuario_id) references usuarios(id) on delete cascade
 );
 
--- 7. Tabla: Recomendaciones
-CREATE TABLE IF NOT EXISTS recomendaciones (
-  id SERIAL PRIMARY KEY,
-  titulo VARCHAR(150) NOT NULL,
-  descripcion TEXT NOT NULL,
-  categoria_impacto VARCHAR(50) NOT NULL CHECK (categoria_impacto IN ('Transporte', 'Energ�a', 'Agua', 'Residuos', 'General')),
-  accion_sugerida TEXT NOT NULL
+-- 7. tabla: recomendaciones
+create table if not exists recomendaciones (
+  id int auto_increment primary key,
+  titulo varchar(150) not null,
+  descripcion text not null,
+  categoria_impacto enum(
+    'transporte',
+    'energia',
+    'agua',
+    'residuos',
+    'general'
+  ) not null,
+  accion_sugerida text not null
 );
 
--- 8. Tabla: Notificaciones
-CREATE TABLE IF NOT EXISTS notificaciones (
-  id SERIAL PRIMARY KEY,
-  usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  titulo VARCHAR(150) NOT NULL,
-  mensaje TEXT NOT NULL,
-  leida BOOLEAN DEFAULT FALSE,
-  fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- 8. tabla: notificaciones
+create table if not exists notificaciones (
+  id int auto_increment primary key,
+  usuario_id int not null,
+  titulo varchar(150) not null,
+  mensaje text not null,
+  leida boolean default false,
+  fecha_creacion timestamp default current_timestamp,
+  foreign key (usuario_id) references usuarios(id) on delete cascade,
+  index idx_notificaciones_usuario (usuario_id, leida)
 );
-
--- Indices B-Tree Estandar
-CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
-CREATE INDEX IF NOT EXISTS idx_reportes_usuario ON reportes_ambientales(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_reportes_categoria ON reportes_ambientales(categoria_id);
-CREATE INDEX IF NOT EXISTS idx_reportes_estado ON reportes_ambientales(estado);
-CREATE INDEX IF NOT EXISTS idx_ubicaciones_coords ON ubicaciones(latitud, longitud);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON notificaciones(usuario_id, leida);
