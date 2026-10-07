@@ -27,25 +27,29 @@ import { AuthService } from '../../services/auth.service';
           <form (ngSubmit)="onRegister()" #registerForm="ngForm">
             <div class="field-row">
               <label class="field">
-                <span>Nombre</span>
+                <span>Nombre *</span>
                 <input type="text" [(ngModel)]="user.nombre" name="nombre" required placeholder="Tu nombre" />
               </label>
 
               <label class="field">
-                <span>Apellido</span>
+                <span>Apellido *</span>
                 <input type="text" [(ngModel)]="user.apellido" name="apellido" required placeholder="Tu apellido" />
               </label>
             </div>
 
             <label class="field">
-              <span>Correo electrónico</span>
+              <span>Correo electrónico *</span>
               <input type="email" [(ngModel)]="user.correo" name="correo" required email placeholder="tucorreo@ejemplo.com" />
             </label>
 
             <label class="field">
-              <span>Contraseña</span>
+              <span>Contraseña * (mínimo 6 caracteres)</span>
               <input type="password" [(ngModel)]="user.password" name="password" required minlength="6" placeholder="••••••••" />
             </label>
+
+            <p *ngIf="registerForm.touched && !registerForm.valid" class="validation-hint" role="status">
+              Completa todos los campos obligatorios; usa un correo válido y una contraseña de al menos 6 caracteres.
+            </p>
 
             <button type="submit" class="primary-btn" [disabled]="!registerForm.valid || cargando">
               {{ cargando ? 'Creando cuenta...' : 'Registrarme' }}
@@ -144,6 +148,13 @@ import { AuthService } from '../../services/auth.service';
       gap: 0.45rem;
       font-size: 0.92rem;
       font-weight: 600;
+    }
+
+    .validation-hint {
+      margin: 0;
+      color: #765320;
+      font-size: 0.82rem;
+      line-height: 1.45;
     }
 
     input {
