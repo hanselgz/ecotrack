@@ -37,7 +37,7 @@ export const ReporteAmbientalController = {
       const { estado } = req.body || {};
       
       if (!estado) {
-        const error: any = new Error('El campo "estado" es obligatorio en el cuerpo de la petición');
+        const error: any = new Error('El campo "estado" es obligatorio en el cuerpo de la peticion');
         error.statusCode = 400;
         throw error;
       }
@@ -54,6 +54,33 @@ export const ReporteAmbientalController = {
       const id = Number(req.params.id);
       await ReporteAmbientalService.delete(id);
       return sendSuccess(res, 'Reporte ambiental eliminado correctamente', null);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  getStats: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const stats = await ReporteAmbientalService.getStats();
+      return sendSuccess(res, 'Estadisticas obtenidas correctamente', stats);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  evaluarImpacto: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params.id);
+      const { nivel_impacto, observaciones } = req.body || {};
+
+      if (!nivel_impacto) {
+        const error: any = new Error('El campo "nivel_impacto" es obligatorio');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const actualizado = await ReporteAmbientalService.evaluarImpacto(id, nivel_impacto, observaciones || '');
+      return sendSuccess(res, 'Evaluacion de impacto registrada correctamente', actualizado);
     } catch (error) {
       next(error);
     }

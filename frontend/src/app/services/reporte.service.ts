@@ -1,48 +1,54 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { ReporteAmbiental, ReporteInput, ApiResponse, Categoria } from '../models/reporte.model';
+import { Observable } from 'rxjs';
+
+export interface Reporte {
+  id?: number;
+  titulo: string;
+  descripcion: string;
+  estado?: string;
+  categoria_id?: number;
+  categoria_nombre?: string;
+  municipio?: string;
+  departamento?: string;
+  direccion?: string;
+  usuario_nombre?: string;
+  usuario_apellido?: string;
+  fecha_creacion?: string | Date;
+  [key: string]: any;
+}
+
+export interface Categoria {
+  id: number;
+  nombre: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReporteService {
-  private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'http://localhost:3000/api/reportes-ambientales';
+  private categoriasUrl = 'http://localhost:3000/api/categorias';
 
-  // Obtener todos los reportes
-  getReportes(): Observable<ReporteAmbiental[]> {
-    return this.http.get<ApiResponse<ReporteAmbiental[]>>(`${this.apiUrl}/reports`).pipe(
-      map(res => res.data)
-    );
+  constructor(private http: HttpClient) {}
+
+  obtenerReportes(): Observable<any> {
+    return this.http.get<any>(this.apiUrl);
   }
 
-  // Obtener un reporte por ID
-  getReporteById(id: number): Observable<ReporteAmbiental> {
-    return this.http.get<ApiResponse<ReporteAmbiental>>(`${this.apiUrl}/reports/${id}`).pipe(
-      map(res => res.data)
-    );
+  getReportes(): Observable<any> {
+    return this.obtenerReportes();
   }
 
-  // Obtener categorias
-  getCategorias(): Observable<Categoria[]> {
-    return this.http.get<ApiResponse<Categoria[]>>(`${this.apiUrl}/categories`).pipe(
-      map(res => res.data)
-    );
+  crearReporte(datos: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl, datos);
   }
 
-  // Crear reporte
-  crearReporte(reporte: ReporteInput): Observable<ApiResponse<ReporteAmbiental>> {
-    return this.http.post<ApiResponse<ReporteAmbiental>>(`${this.apiUrl}/reports`, reporte);
+  getStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/stats`);
   }
 
-  // Actualizar estado
-  actualizarEstado(id: number, estado: string): Observable<ApiResponse<ReporteAmbiental>> {
-    return this.http.patch<ApiResponse<ReporteAmbiental>>(`${this.apiUrl}/reports/${id}/status`, { estado });
-  }
-
-  // Eliminar reporte
-  eliminarReporte(id: number): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/reports/${id}`);
+  obtenerCategorias(): Observable<Categoria[]> {
+    return this.http.get<Categoria[]>(this.categoriasUrl);
   }
 }

@@ -96,7 +96,7 @@
 .btn-primary:hover:not(:disabled) { background-color: var(--primary-dark); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Estilos para el Mapa */
+/* Sección del Mapa */
 .map-section {
   display: flex;
   flex-direction: column;
@@ -115,6 +115,56 @@
   border-radius: 8px;
   border: 1px solid var(--border);
   z-index: 1;
+}
+
+/* Sección de Filtros y Buscador */
+.filter-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.2rem;
+  background-color: #ffffff;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.filter-group input, .filter-group select {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-group input:focus, .filter-group select:focus {
+  border-color: var(--primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
 }
 
 .reports-grid {

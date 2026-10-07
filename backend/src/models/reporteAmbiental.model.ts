@@ -13,7 +13,9 @@ export interface ReporteAmbientalInput {
   titulo: string;
   descripcion: string;
   fotografia?: string;
-  estado?: 'Pendiente' | 'En revisión' | 'Verificado' | 'Resuelto' | 'Rechazado';
+  estado?: 'pendiente' | 'en revision' | 'verificado' | 'resuelto' | 'rechazado';
+  nivel_impacto?: 'bajo' | 'medio' | 'alto' | 'critico';
+  observaciones_evaluacion?: string;
   usuario_id: number;
   categoria_id: number;
   ubicacion: UbicacionInput;
@@ -22,7 +24,7 @@ export interface ReporteAmbientalInput {
 export const ReporteAmbientalModel = {
   getAll: async () => {
     const query = 'SELECT ' +
-      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, ' +
+      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, r.nivel_impacto, r.observaciones_evaluacion, ' +
       'r.fecha_creacion, r.fecha_actualizacion, ' +
       'c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono, ' +
       'u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email, ' +
@@ -39,7 +41,7 @@ export const ReporteAmbientalModel = {
 
   getById: async (id: number) => {
     const query = 'SELECT ' +
-      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, ' +
+      'r.id, r.titulo, r.descripcion, r.fotografia, r.estado, r.nivel_impacto, r.observaciones_evaluacion, ' +
       'r.fecha_creacion, r.fecha_actualizacion, ' +
       'c.id AS categoria_id, c.nombre AS categoria_nombre, c.icono AS categoria_icono, ' +
       'u.id AS usuario_id, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.email AS usuario_email, ' +
@@ -60,7 +62,7 @@ export const ReporteAmbientalModel = {
     try {
       await connection.beginTransaction();
 
-      // 1. Insertar Ubicación
+      // 1. Insertar Ubicacion
       const { departamento, municipio, direccion, referencia, latitud, longitud } = data.ubicacion;
       const [ubResult]: any = await connection.query(
         'INSERT INTO ubicaciones (departamento, municipio, direccion, referencia, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?)',
@@ -69,10 +71,10 @@ export const ReporteAmbientalModel = {
       const ubicacionId = ubResult.insertId;
 
       // 2. Insertar Reporte Ambiental
-      const { titulo, descripcion, fotografia, estado, usuario_id, categoria_id } = data;
+      const { titulo, descripcion, fotografia, estado, nivel_impacto, observaciones_evaluacion, usuario_id, categoria_id } = data;
       const [repResult]: any = await connection.query(
-        'INSERT INTO reportes_ambientales (titulo, descripcion, fotografia, estado, usuario_id, categoria_id, ubicacion_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [titulo, descripcion, fotografia || null, estado || 'Pendiente', usuario_id, categoria_id, ubicacionId]
+        'INSERT INTO reportes_ambientales (titulo, descripcion, fotografia, estado, nivel_impacto, observaciones_evaluacion, usuario_id, categoria_id, ubicacion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [titulo, descripcion, fotografia || null, estado || 'pendiente', nivel_impacto || 'bajo', observaciones_evaluacion || null, usuario_id, categoria_id, ubicacionId]
       );
 
       await connection.commit();
@@ -96,5 +98,34 @@ export const ReporteAmbientalModel = {
   delete: async (id: number) => {
     const [result]: any = await pool.query('DELETE FROM reportes_ambientales WHERE id = ?', [id]);
     return result.affectedRows > 0;
+  },
+
+  getEstadisticas: async () => {
+    const [totalRow]: any = await pool.query('SELECT COUNT(*) as total FROM reportes_ambientales');
+    const [estadosRows]: any = await pool.query(
+      'SELECT estado, COUNT(*) as cantidad FROM reportes_ambientales GROUP BY estado'
+    );
+    const [categoriasRows]: any = await pool.query(
+      `SELECT c.nombre, COUNT(r.id) as cantidad 
+       FROM categorias_reporte c 
+       LEFT JOIN reportes_ambientales r ON c.id = r.categoria_id 
+       GROUP BY c.id, c.nombre`
+    );
+
+    return {
+      total_reportes: totalRow[0]?.total || 0,
+      por_estado: estadosRows,
+      por_categoria: categoriasRows
+    };
+  },
+
+  evaluarImpacto: async (id: number, nivelImpacto: string, observaciones: string) => {
+    const query = `
+      UPDATE reportes_ambientales 
+      SET nivel_impacto = ?, observaciones_evaluacion = ? 
+      WHERE id = ?
+    `;
+    await pool.query(query, [nivelImpacto, observaciones, id]);
+    return ReporteAmbientalModel.getById(id);
   }
 };

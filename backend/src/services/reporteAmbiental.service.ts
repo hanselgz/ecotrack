@@ -34,19 +34,39 @@ export const ReporteAmbientalService = {
   },
 
   updateStatus: async (id: number, estado: string) => {
-    const estadosValidos = ['Pendiente', 'En revision', 'Verificado', 'Resuelto', 'Rechazado'];
-    if (!estadosValidos.includes(estado)) {
-      const error: any = new Error('Estado no volido');
+    const estadosValidos = ['pendiente', 'en revision', 'verificado', 'resuelto', 'rechazado'];
+    const estadoMinusc = estado.toLowerCase();
+    
+    if (!estadosValidos.includes(estadoMinusc)) {
+      const error: any = new Error('Estado no valido. Usar: pendiente, en revision, verificado, resuelto o rechazado');
       error.statusCode = 400;
       throw error;
     }
 
     await ReporteAmbientalService.getById(id);
-    return await ReporteAmbientalModel.updateStatus(id, estado);
+    return await ReporteAmbientalModel.updateStatus(id, estadoMinusc);
   },
 
   delete: async (id: number) => {
     await ReporteAmbientalService.getById(id);
     return await ReporteAmbientalModel.delete(id);
+  },
+
+  getStats: async () => {
+    return await ReporteAmbientalModel.getEstadisticas();
+  },
+
+  evaluarImpacto: async (id: number, nivelImpacto: string, observaciones: string) => {
+    const nivelesValidos = ['bajo', 'medio', 'alto', 'critico'];
+    const nivelMinusc = nivelImpacto.toLowerCase();
+
+    if (!nivelesValidos.includes(nivelMinusc)) {
+      const error: any = new Error('Nivel de impacto no valido. Debe ser: bajo, medio, alto o critico');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await ReporteAmbientalService.getById(id);
+    return await ReporteAmbientalModel.evaluarImpacto(id, nivelMinusc, observaciones);
   }
 };

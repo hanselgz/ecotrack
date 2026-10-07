@@ -1,0 +1,185 @@
+<div class="reports-container">
+  <!-- Formulario para registrar reportes -->
+  <div class="card form-card">
+    <h2>Registrar Nuevo Reporte</h2>
+    <form (ngSubmit)="guardarReporte()" #reporteForm="ngForm">
+      
+      <div class="form-row">
+        <div class="form-group col">
+          <label for="titulo">Título del Reporte *</label>
+          <input 
+            type="text" 
+            id="titulo" 
+            name="titulo" 
+            class="form-control" 
+            placeholder="Ej. Acumulación de plástico" 
+            [(ngModel)]="nuevoReporte.titulo" 
+            required />
+        </div>
+
+        <div class="form-group col">
+          <label for="categoria">Categoría *</label>
+          <select 
+            id="categoria" 
+            name="categoria_id" 
+            class="form-control" 
+            [(ngModel)]="nuevoReporte.categoria_id" 
+            required>
+            <option [ngValue]="null" disabled selected>Selecciona una categoría</option>
+            <option *ngFor="let cat of categorias" [value]="cat.id">
+              {{ cat.nombre }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción detallada *</label>
+        <textarea 
+          id="descripcion" 
+          name="descripcion" 
+          rows="3" 
+          class="form-control" 
+          placeholder="Describe la situación ambiental observada..." 
+          [(ngModel)]="nuevoReporte.descripcion" 
+          required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label for="departamento">Departamento *</label>
+          <input 
+            type="text" 
+            id="departamento" 
+            name="departamento" 
+            class="form-control" 
+            placeholder="Ej. Guatemala" 
+            [(ngModel)]="nuevoReporte.ubicacion.departamento" 
+            required />
+        </div>
+
+        <div class="form-group col">
+          <label for="municipio">Municipio *</label>
+          <input 
+            type="text" 
+            id="municipio" 
+            name="municipio" 
+            class="form-control" 
+            placeholder="Ej. Guatemala" 
+            [(ngModel)]="nuevoReporte.ubicacion.municipio" 
+            required />
+        </div>
+
+        <div class="form-group col">
+          <label for="latitud">Latitud *</label>
+          <input 
+            type="number" 
+            step="any" 
+            id="latitud" 
+            name="latitud" 
+            class="form-control" 
+            [(ngModel)]="nuevoReporte.ubicacion.latitud" 
+            required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-4">
+          <label for="longitud">Longitud *</label>
+          <input 
+            type="number" 
+            step="any" 
+            id="longitud" 
+            name="longitud" 
+            class="form-control" 
+            [(ngModel)]="nuevoReporte.ubicacion.longitud" 
+            required />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Publicar Reporte</button>
+    </form>
+  </div>
+
+  <!-- Barra de Filtros y Estadísticas -->
+  <div class="filters-bar card">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Buscar por título o descripción..." 
+        [(ngModel)]="textoBusqueda" 
+        (input)="aplicarFiltros()" />
+    </div>
+
+    <div class="filter-selectors">
+      <select class="form-control" [(ngModel)]="categoriaFiltro" (change)="aplicarFiltros()">
+        <option value="">Todas las categorías</option>
+        <option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nombre }}</option>
+      </select>
+
+      <select class="form-control" [(ngModel)]="estadoFiltro" (change)="aplicarFiltros()">
+        <option value="">Todos los estados</option>
+        <option value="Pendiente">Pendiente ({{ contarPorEstado('Pendiente') }})</option>
+        <option value="En Proceso">En Proceso ({{ contarPorEstado('En Proceso') }})</option>
+        <option value="Resuelto">Resuelto ({{ contarPorEstado('Resuelto') }})</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Listado de Reportes -->
+  <div *ngIf="cargando" class="text-center loading-state">
+    <p>Cargando reportes...</p>
+  </div>
+
+  <div *ngIf="!cargando && reportesFiltrados.length === 0" class="empty-state card text-center">
+    <p>No se encontraron reportes registrados.</p>
+  </div>
+
+  <div class="reports-list" *ngIf="!cargando && reportesFiltrados.length > 0">
+    <div class="report-card card" *ngFor="let rep of reportesFiltrados">
+      <div class="report-header">
+        <h3>{{ rep.titulo || rep['titulo'] }}</h3>
+        <span class="badge" [ngClass]="getBadgeClass(rep.estado || rep['estado'])">
+          {{ rep.estado || rep['estado'] || 'Pendiente' }}
+        </span>
+      </div>
+
+      <p class="report-desc">{{ rep.descripcion || rep['descripcion'] }}</p>
+
+      <div class="report-details">
+        <span class="badge-category">
+          {{ rep.categoria_nombre || rep['categoria_nombre'] || 'General' }}
+        </span>
+
+        <p *ngIf="rep.municipio || rep['municipio']">
+          <strong>Ubicación:</strong> {{ rep.municipio || rep['municipio'] }}, {{ rep.departamento || rep['departamento'] }}
+        </p>
+
+        <p *ngIf="rep.direccion || rep['direccion']">
+          <strong>Dirección:</strong> {{ rep.direccion || rep['direccion'] }}
+        </p>
+
+        <p *ngIf="rep.usuario_nombre || rep['usuario_nombre']">
+          <strong>Usuario:</strong> {{ rep.usuario_nombre || rep['usuario_nombre'] }} {{ rep.usuario_apellido || rep['usuario_apellido'] }}
+        </p>
+
+        <p *ngIf="rep.fecha_creacion || rep['fecha_creacion']">
+          <strong>Fecha:</strong> {{ (rep.fecha_creacion || rep['fecha_creacion']) | date:'mediumDate' }}
+        </p>
+      </div>
+
+      <div class="report-actions">
+        <label>Cambiar estado:</label>
+        <select 
+          class="form-control form-control-sm" 
+          [value]="rep.estado || rep['estado'] || 'Pendiente'" 
+          (change)="onEstadoChange(rep.id || rep['id'], $event)">
+          <option value="Pendiente">Pendiente</option>
+          <option value="En Proceso">En Proceso</option>
+          <option value="Resuelto">Resuelto</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
