@@ -8,14 +8,13 @@ router.post('/impacto', (req, res) => {
     const { 
       usuario_id = 1,
       transporte_km_semana = 0, 
-      tipo_transporte = 'gasolina', // 'gasolina', 'diesel', 'publico', 'electrico', 'bicicleta'
+      tipo_transporte = 'gasolina',
       energia_kwh_mes = 0,
       agua_m3_mes = 0,
       residuos_kg_semana = 0,
       recicla = false
     } = req.body;
 
-    // Factores de emisión aproximados (kg CO2e)
     let factorTransporte = 0.21; // promedio auto gasolina
     if (tipo_transporte === 'diesel') factorTransporte = 0.25;
     if (tipo_transporte === 'publico') factorTransporte = 0.08;
@@ -23,8 +22,8 @@ router.post('/impacto', (req, res) => {
     if (tipo_transporte === 'bicicleta') factorTransporte = 0.0;
 
     const huellaTransporteMes = (transporte_km_semana * 4) * factorTransporte;
-    const huellaEnergiaMes = energia_kwh_mes * 0.45; // ~0.45 kg CO2 por kWh
-    const huellaAguaMes = agua_m3_mes * 0.35; // impacto indirecto tratamiento/bombeo
+    const huellaEnergiaMes = energia_kwh_mes * 0.45;
+    const huellaAguaMes = agua_m3_mes * 0.35;
     const huellaResiduosMes = (residuos_kg_semana * 4) * (recicla ? 0.8 : 1.5);
 
     const huellaCarbonoTotal = Number((huellaTransporteMes + huellaEnergiaMes + huellaAguaMes + huellaResiduosMes).toFixed(2));

@@ -7,7 +7,7 @@ export interface Usuario {
   apellido: string;
   email: string;
   password_hash?: string;
-  password?: string; // Para recibir la contraseña plana desde el body
+  password?: string;
   rol_id?: number;
   rol_nombre?: string;
   puntuacion_ambiental?: number;
