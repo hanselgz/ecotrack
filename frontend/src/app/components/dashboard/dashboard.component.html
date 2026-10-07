@@ -1,29 +1,47 @@
-<div class="container mt-4">
-  <h2>Dashboard Ambiental</h2>
-  
-  <div *ngIf="cargando" class="text-center my-4">
-    <p>Cargando datos...</p>
+<section class="dashboard-shell">
+  <div class="dashboard-header">
+    <div>
+      <span class="eyebrow">Dashboard</span>
+      <h2>EcoTrack General</h2>
+    </div>
+    <p>Indicadores en tiempo real sobre reportes e impacto ambiental.</p>
   </div>
 
-  <div *ngIf="!cargando && estadisticas" class="row my-4">
-    <div class="col-md-4">
-      <div class="card text-white bg-primary mb-3">
-        <div class="card-body">
-          <h5 class="card-title">Total de Reportes</h5>
-          <p class="card-text display-6">{{ estadisticas.total_reportes || 0 }}</p>
-        </div>
-      </div>
-    </div>
+  <div *ngIf="cargando" class="loading-state">
+    <p>Cargando métricas del sistema...</p>
   </div>
 
-  <h3 class="mt-4">Listado de Reportes</h3>
-  <div class="list-group">
-    <div *ngFor="let reporte of reportes" class="list-group-item list-group-item-action">
-      <div class="d-flex w-100 justify-between">
-        <h5 class="mb-1">{{ reporte.titulo }}</h5>
-        <small class="badge bg-secondary">{{ reporte.estado }}</small>
+  <div *ngIf="!cargando && estadisticas" class="stats-grid">
+    <article class="stat-card total">
+      <div class="icon">R</div>
+      <div class="content">
+        <span>Total de reportes</span>
+        <strong>{{ estadisticas.total_reportes || 0 }}</strong>
       </div>
-      <p class="mb-1">{{ reporte.descripcion }}</p>
-    </div>
+    </article>
+
+    <article class="stat-card pending">
+      <div class="icon">P</div>
+      <div class="content">
+        <span>Pendientes</span>
+        <strong>{{ estadisticas.pendientes || 0 }}</strong>
+      </div>
+    </article>
+
+    <article class="stat-card resolved">
+      <div class="icon">S</div>
+      <div class="content">
+        <span>Resueltos</span>
+        <strong>{{ estadisticas.resueltos || 0 }}</strong>
+      </div>
+    </article>
+
+    <article class="stat-card score">
+      <div class="icon">%</div>
+      <div class="content">
+        <span>Puntuación media</span>
+        <strong>{{ estadisticas.puntuacion_media || 0 }}/100</strong>
+      </div>
+    </article>
   </div>
-</div>
+</section>

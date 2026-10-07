@@ -14,7 +14,13 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   register(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, data);
+    const payload = {
+      ...data,
+      email: data.email || data.correo,
+      correo: data.correo || data.email
+    };
+
+    return this.http.post(`${this.apiUrl}/register`, payload);
   }
 
   login(credentials: { correo: string; password: string }): Observable<any> {
@@ -35,8 +41,17 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  updateCurrentUser(user: Usuario): void {
+    localStorage.setItem('ecotrack_user', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
   getToken(): string | null {
     return localStorage.getItem('ecotrack_token');
+  }
+
+  getCurrentUser(): Usuario | null {
+    return this.currentUserSubject.value;
   }
 
   isLoggedIn(): boolean {

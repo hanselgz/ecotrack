@@ -1,120 +1,112 @@
-drop database if exists ecotrack_db_in5bm;
+DROP DATABASE IF EXISTS ecotrack_db_in5bm;
+CREATE DATABASE ecotrack_db_in5bm;
+USE ecotrack_db_in5bm;
 
-create database if not exists ecotrack_db_in5bm;
-
-use ecotrack_db_in5bm;
-
--- 1. tabla: roles
-create table if not exists roles (
-    id int auto_increment primary key,
-    nombre varchar(20) not null unique
+CREATE TABLE IF NOT EXISTS roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(30) NOT NULL UNIQUE
 );
 
--- 2. tabla: usuarios
-create table if not exists usuarios (
-    id int auto_increment primary key,
-    nombre varchar(100) not null,
-    apellido varchar(100) not null,
-    email varchar(150) not null unique,
-    password_hash varchar(255) not null,
-    rol_id int not null,
-    puntuacion_ambiental int default 0,
-    fecha_registro timestamp default current_timestamp,
-    foreign key (rol_id) references roles(id) on delete restrict,
-    index idx_usuarios_email (email)
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    rol_id INT NOT NULL,
+    puntuacion_ambiental INT NOT NULL DEFAULT 0,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuarios_roles
+        FOREIGN KEY (rol_id) REFERENCES roles(id)
+        ON DELETE RESTRICT,
+    INDEX idx_usuarios_email (email),
+    INDEX idx_usuarios_rol_id (rol_id)
 );
 
--- 3. tabla: categorias de reporte
-create table if not exists categorias_reporte (
-    id int auto_increment primary key,
-    nombre varchar(50) not null unique,
-    descripcion text,
-    icono varchar(50)
+CREATE TABLE IF NOT EXISTS categorias_reporte (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL UNIQUE,
+    descripcion TEXT,
+    icono VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. tabla: ubicaciones
-create table if not exists ubicaciones (
-    id int auto_increment primary key,
-    departamento varchar(100) not null,
-    municipio varchar(100) not null,
-    direccion text,
-    referencia text,
-    latitud decimal(10,8) not null,
-    longitud decimal(11,8) not null,
-    index idx_ubicaciones_coords (latitud, longitud)
+CREATE TABLE IF NOT EXISTS ubicaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    departamento VARCHAR(100) NOT NULL,
+    municipio VARCHAR(100) NOT NULL,
+    direccion TEXT,
+    referencia TEXT,
+    latitud DECIMAL(10,8) NOT NULL,
+    longitud DECIMAL(11,8) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ubicaciones_coords (latitud, longitud)
 );
 
--- 5. tabla: reportes ambientales
-create table if not exists reportes_ambientales (
-    id int auto_increment primary key,
-    titulo varchar(150) not null,
-    descripcion text not null,
-    fotografia varchar(255),
-    estado enum(
-        'pendiente',
-        'en revision',
-        'verificado',
-        'resuelto',
-        'rechazado'
-    ) default 'pendiente',
-    nivel_impacto enum(
-        'bajo',
-        'medio',
-        'alto',
-        'critico'
-    ) default 'bajo',
-    observaciones_evaluacion text null,
-    usuario_id int not null,
-    categoria_id int not null,
-    ubicacion_id int not null,
-    fecha_creacion timestamp default current_timestamp,
-    fecha_actualizacion timestamp default current_timestamp on update current_timestamp,
-    foreign key (usuario_id) references usuarios(id) on delete cascade,
-    foreign key (categoria_id) references categorias_reporte(id) on delete restrict,
-    foreign key (ubicacion_id) references ubicaciones(id) on delete cascade,
-    index idx_reportes_usuario (usuario_id),
-    index idx_reportes_categoria (categoria_id),
-    index idx_reportes_estado (estado)
+CREATE TABLE IF NOT EXISTS reportes_ambientales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    descripcion TEXT NOT NULL,
+    fotografia TEXT,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente',
+    nivel_impacto VARCHAR(20) NOT NULL DEFAULT 'Bajo',
+    observaciones_evaluacion TEXT,
+    usuario_id INT NOT NULL,
+    categoria_id INT NOT NULL,
+    ubicacion_id INT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reportes_usuarios
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_reportes_categorias
+        FOREIGN KEY (categoria_id) REFERENCES categorias_reporte(id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_reportes_ubicaciones
+        FOREIGN KEY (ubicacion_id) REFERENCES ubicaciones(id)
+        ON DELETE CASCADE,
+    INDEX idx_reportes_usuario (usuario_id),
+    INDEX idx_reportes_categoria (categoria_id),
+    INDEX idx_reportes_estado (estado),
+    INDEX idx_reportes_fecha (fecha_creacion)
 );
 
--- 6. tabla: evaluaciones de impacto
-create table if not exists evaluaciones_impacto (
-    id int auto_increment primary key,
-    usuario_id int not null,
-    transporte_tipo varchar(50) not null,
-    transporte_distancia decimal(8,2) not null,
-    energia_kwh decimal(8,2) not null,
-    agua_litros decimal(8,2) not null,
-    residuos_kg decimal(8,2) not null,
-    huella_carbono_kg decimal(8,2) not null,
-    puntuacion_calculada int not null,
-    fecha_evaluacion timestamp default current_timestamp,
-    foreign key (usuario_id) references usuarios(id) on delete cascade
+CREATE TABLE IF NOT EXISTS evaluaciones_impacto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    transporte_tipo VARCHAR(50) NOT NULL,
+    transporte_distancia DECIMAL(10,2) NOT NULL DEFAULT 0,
+    energia_kwh DECIMAL(10,2) NOT NULL DEFAULT 0,
+    agua_litros DECIMAL(10,2) NOT NULL DEFAULT 0,
+    residuos_kg DECIMAL(10,2) NOT NULL DEFAULT 0,
+    huella_carbono_kg DECIMAL(10,2) NOT NULL DEFAULT 0,
+    puntuacion_ambiental INT NOT NULL DEFAULT 0,
+    fecha_evaluacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_evaluaciones_usuarios
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE,
+    INDEX idx_evaluaciones_usuario (usuario_id)
 );
 
--- 7. tabla: recomendaciones
-create table if not exists recomendaciones (
-    id int auto_increment primary key,
-    titulo varchar(150) not null,
-    descripcion text not null,
-    categoria_impacto enum(
-        'transporte',
-        'energia',
-        'agua',
-        'residuos',
-        'general'
-    ) not null,
-    accion_sugerida text not null
+CREATE TABLE IF NOT EXISTS recomendaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    descripcion TEXT NOT NULL,
+    categoria_impacto VARCHAR(40) NOT NULL,
+    accion_sugerida TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_recomendaciones_categoria (categoria_impacto)
 );
 
--- 8. tabla: notificaciones
-create table if not exists notificaciones (
-    id int auto_increment primary key,
-    usuario_id int not null,
-    titulo varchar(150) not null,
-    mensaje text not null,
-    leida boolean default false,
-    fecha_creacion timestamp default current_timestamp,
-    foreign key (usuario_id) references usuarios(id) on delete cascade,
-    index idx_notificaciones_usuario (usuario_id, leida)
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    leida BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notificaciones_usuarios
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE,
+    INDEX idx_notificaciones_usuario (usuario_id, leida)
 );

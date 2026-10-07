@@ -1,2 +1,60 @@
-/* frontend/src/styles.css */
 @import 'leaflet/dist/leaflet.css';
+
+:root {
+  --bg: #061510;
+  --bg-soft: #0c201b;
+  --panel: #0f2a22;
+  --panel-soft: #f5faf7;
+  --primary: #3dbb8f;
+  --primary-strong: #1f8d64;
+  --text: #eefaf4;
+  --text-soft: #cfe3da;
+  --muted: #5d736d;
+  --shadow: 0 18px 32px rgba(0, 0, 0, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+main {
+  min-width: 0;
+  padding: 1rem 0 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #163b32;
+}
+
+.leaflet-control-zoom a {
+  color: #0d1f1a !important;
+}

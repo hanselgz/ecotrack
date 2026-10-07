@@ -1,0 +1,130 @@
+<div class="calculator-container">
+  <header class="calculator-hero">
+    <div>
+      <span class="eyebrow">EcoTrack · Hábitos cotidianos</span>
+      <h1>¿Cómo puedo ahorrar más?</h1>
+      <p>Cuéntanos un poco de tus hábitos y encuentra cambios prácticos para tu hogar. Las referencias de esta guía son orientativas, no estándares oficiales.</p>
+    </div>
+  </header>
+
+  <form *ngIf="!resultado" #habitosForm="ngForm" (ngSubmit)="analizar(habitosForm)" class="habit-form">
+    <div class="habit-grid">
+      <section class="habit-section">
+        <div class="habit-heading"><span>01</span><div><h2>Energía</h2><p>Consumo de casa e iluminación.</p></div></div>
+        <div class="field-group">
+          <label for="energia">Consumo eléctrico mensual (kWh) *</label>
+          <input id="energia" name="energiaKwh" type="number" min="0" step="any" required
+            [(ngModel)]="datos.energiaKwh" placeholder="Ej. 180" />
+        </div>
+        <fieldset class="choice-field">
+          <legend>¿Usas focos LED en las áreas más utilizadas? *</legend>
+          <label><input type="radio" name="focosLed" [value]="true" [(ngModel)]="datos.focosLed" required /> Sí</label>
+          <label><input type="radio" name="focosLed" [value]="false" [(ngModel)]="datos.focosLed" required /> No</label>
+        </fieldset>
+        <fieldset class="choice-field">
+          <legend>¿Tus electrodomésticos principales son eficientes? *</legend>
+          <label><input type="radio" name="electrodomesticosEficientes" [value]="true"
+            [(ngModel)]="datos.electrodomesticosEficientes" required /> Sí</label>
+          <label><input type="radio" name="electrodomesticosEficientes" [value]="false"
+            [(ngModel)]="datos.electrodomesticosEficientes" required /> No</label>
+        </fieldset>
+      </section>
+
+      <section class="habit-section">
+        <div class="habit-heading"><span>02</span><div><h2>Agua</h2><p>Un dato de tu consumo en casa.</p></div></div>
+        <div class="field-group">
+          <label for="agua">Consumo mensual de agua (m³) *</label>
+          <input id="agua" name="aguaM3" type="number" min="0" step="any" required
+            [(ngModel)]="datos.aguaM3" placeholder="Ej. 12" />
+          <small>Lo encuentras en el recibo del servicio de agua.</small>
+        </div>
+      </section>
+
+      <section class="habit-section">
+        <div class="habit-heading"><span>03</span><div><h2>Transporte</h2><p>Cómo te desplazas durante la semana.</p></div></div>
+        <div class="field-group">
+          <label for="kmAuto">Kilómetros en automóvil por semana *</label>
+          <input id="kmAuto" name="kmAutoSemana" type="number" min="0" step="any" required
+            [(ngModel)]="datos.kmAutoSemana" placeholder="Ej. 80" />
+        </div>
+        <div class="field-group">
+          <label for="viajesPublico">Viajes en transporte público por semana *</label>
+          <input id="viajesPublico" name="viajesPublicoSemana" type="number" min="0" step="1" required
+            [(ngModel)]="datos.viajesPublicoSemana" placeholder="Ej. 4" />
+        </div>
+      </section>
+
+      <section class="habit-section">
+        <div class="habit-heading"><span>04</span><div><h2>Residuos</h2><p>Generación y separación en casa.</p></div></div>
+        <div class="field-group">
+          <label for="residuos">Residuos aproximados por semana (kg) *</label>
+          <input id="residuos" name="residuosKgSemana" type="number" min="0" step="any" required
+            [(ngModel)]="datos.residuosKgSemana" placeholder="Ej. 4" />
+        </div>
+        <div class="field-group">
+          <label for="reciclaje">¿Con qué frecuencia separas residuos? *</label>
+          <select id="reciclaje" name="reciclaje" [(ngModel)]="datos.reciclaje" required>
+            <option [ngValue]="null" disabled>Selecciona una opción</option>
+            <option value="nunca">Nunca</option>
+            <option value="a veces">A veces</option>
+            <option value="casi siempre">Casi siempre</option>
+            <option value="siempre">Siempre</option>
+          </select>
+        </div>
+      </section>
+    </div>
+
+    <div class="form-actions">
+      <p>* Respuestas necesarias para adaptar tus sugerencias.</p>
+      <button type="submit" class="btn-primary">Ver mis recomendaciones</button>
+    </div>
+  </form>
+
+  <section *ngIf="resultado as perfil" class="results-view" aria-live="polite">
+    <header class="profile-banner">
+      <div class="profile-leaf" aria-hidden="true">🌱</div>
+      <div>
+        <span class="eyebrow">Tu perfil ambiental</span>
+        <h2>{{ perfil.perfil }}</h2>
+        <p>{{ perfil.areasPorMejorar }} áreas con una acción práctica sugerida.</p>
+      </div>
+    </header>
+
+    <div class="results-heading">
+      <div><span class="eyebrow">A partir de tus respuestas</span><h3>Recomendaciones para ti</h3></div>
+      <button type="button" class="btn-edit" (click)="volverAEditar()">Volver a editar</button>
+    </div>
+
+    <div class="recommendation-grid">
+      <article class="recommendation-item" *ngFor="let item of perfil.recomendaciones"
+        [class.needs-attention]="item.necesitaAtencion">
+        <div class="recommendation-topline"><span class="recommendation-icon" aria-hidden="true">{{ item.icono }}</span>
+          <span class="recommendation-status">{{ item.estado }}</span></div>
+        <h4>{{ item.area }}</h4>
+        <p>{{ item.texto }}</p>
+      </article>
+    </div>
+
+    <aside class="next-goal">
+      <span aria-hidden="true">✳</span>
+      <div><strong>Tu próximo objetivo</strong><p>{{ perfil.proximoObjetivo }}</p></div>
+    </aside>
+    <p class="disclaimer">Estas sugerencias son orientativas y se basan en las respuestas ingresadas. No representan una medición oficial ni sustituyen una evaluación técnica.</p>
+  </section>
+
+  <section class="news-section">
+    <div class="section-heading">
+      <span class="eyebrow">Para seguir aprendiendo</span>
+      <h3>Actualidad ambiental</h3>
+    </div>
+
+    <div class="news-grid">
+      <a class="news-card" *ngFor="let noticia of noticiasReales" [href]="noticia.url" target="_blank" rel="noopener noreferrer">
+        <span>{{ noticia.fuente }}</span>
+        <h4>{{ noticia.titulo }}</h4>
+        <p>{{ noticia.resumen }}</p>
+        <strong>Leer noticia</strong>
+      </a>
+    </div>
+  </section>
+</div>

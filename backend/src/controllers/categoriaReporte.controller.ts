@@ -6,7 +6,7 @@ export const CategoriaReporteController = {
   getAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const categorias = await CategoriaReporteService.getAll();
-      return sendSuccess(res, 'Categorias obtenidas correctamente', categorias);
+      return sendSuccess(res, categorias, 'Categorias obtenidas correctamente');
     } catch (error) {
       next(error);
     }
@@ -16,7 +16,7 @@ export const CategoriaReporteController = {
     try {
       const id = Number(req.params.id);
       const categoria = await CategoriaReporteService.getById(id);
-      return sendSuccess(res, 'Categoria obtenida correctamente', categoria);
+      return sendSuccess(res, categoria, 'Categoria obtenida correctamente');
     } catch (error) {
       next(error);
     }
@@ -25,7 +25,7 @@ export const CategoriaReporteController = {
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const nuevaCategoria = await CategoriaReporteService.create(req.body);
-      return sendSuccess(res, 'Categoria creada correctamente', nuevaCategoria, 201);
+      return sendSuccess(res, nuevaCategoria, 'Categoria creada correctamente', 201);
     } catch (error) {
       next(error);
     }
@@ -35,7 +35,7 @@ export const CategoriaReporteController = {
     try {
       const id = Number(req.params.id);
       const categoriaActualizada = await CategoriaReporteService.update(id, req.body);
-      return sendSuccess(res, 'Categoria actualizada correctamente', categoriaActualizada);
+      return sendSuccess(res, categoriaActualizada, 'Categoria actualizada correctamente');
     } catch (error) {
       next(error);
     }
@@ -45,7 +45,7 @@ export const CategoriaReporteController = {
     try {
       const id = Number(req.params.id);
       await CategoriaReporteService.delete(id);
-      return sendSuccess(res, 'Categoria eliminada correctamente', null);
+      return sendSuccess(res, null, 'Categoria eliminada correctamente');
     } catch (error) {
       next(error);
     }

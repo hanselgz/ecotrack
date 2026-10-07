@@ -10,7 +10,7 @@ export class AuthController {
       const data = await AuthService.register(req.body);
       return sendSuccess(res, data, 'Usuario registrado exitosamente', 201);
     } catch (error: any) {
-      return sendError(res, error.message, 400);
+      return sendError(res, error.message, error.statusCode || 400);
     }
   }
 
