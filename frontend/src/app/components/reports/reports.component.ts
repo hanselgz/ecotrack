@@ -7,6 +7,13 @@ import * as L from 'leaflet';
 import { AuthService } from '../../services/auth.service';
 import { ReporteService, Reporte, Categoria } from '../../services/reporte.service';
 
+interface ResultadoGeocodificacion {
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: Record<string, string>;
+}
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -65,6 +72,7 @@ export class ReportsComponent implements OnInit {
     ubicacion: {
       departamento: '',
       municipio: '',
+      direccion: '',
       latitud: null as number | null,
       longitud: null as number | null
     }
@@ -134,9 +142,24 @@ export class ReportsComponent implements OnInit {
   }
 
   async guardarReporte(): Promise<void> {
+    if (this.guardandoReporte || this.buscandoDireccion) return;
+
     if (!this.nuevoReporte.titulo || !this.nuevoReporte.categoria_id) {
       alert('Por favor completa los campos obligatorios (*)');
       return;
+    }
+
+    if (this.modoUbicacion === 'manual') {
+      const direccion = this.nuevoReporte.ubicacion.direccion.trim();
+      if (!direccion) {
+        this.errorUbicacion = 'Escribe una dirección exacta para ubicar el reporte.';
+        return;
+      }
+
+      if (this.direccionResuelta !== direccion || this.nuevoReporte.ubicacion.latitud == null || this.nuevoReporte.ubicacion.longitud == null) {
+        const encontrada = await this.geocodificarDireccion(direccion);
+        if (!encontrada) return;
+      }
     }
 
     if (this.modoUbicacion === 'automatica' && (this.nuevoReporte.ubicacion.latitud == null || this.nuevoReporte.ubicacion.longitud == null)) {
@@ -152,7 +175,12 @@ export class ReportsComponent implements OnInit {
     const { latitud, longitud } = this.nuevoReporte.ubicacion;
     if (latitud == null || longitud == null || !Number.isFinite(latitud) || !Number.isFinite(longitud) ||
         latitud < -90 || latitud > 90 || longitud < -180 || longitud > 180) {
-      alert('Ingresa coordenadas válidas: latitud entre -90 y 90, y longitud entre -180 y 180.');
+      this.errorUbicacion = 'No se pudo determinar una ubicación válida. Revisa la dirección o inténtalo de nuevo.';
+      return;
+    }
+
+    if (!this.nuevoReporte.ubicacion.departamento || !this.nuevoReporte.ubicacion.municipio) {
+      this.errorUbicacion = 'Completa el departamento y municipio para guardar el reporte.';
       return;
     }
 
@@ -164,6 +192,7 @@ export class ReportsComponent implements OnInit {
       ubicacion: {
         departamento: this.nuevoReporte.ubicacion.departamento,
         municipio: this.nuevoReporte.ubicacion.municipio,
+        direccion: this.nuevoReporte.ubicacion.direccion || undefined,
         latitud,
         longitud
       }
@@ -267,20 +296,28 @@ export class ReportsComponent implements OnInit {
       ubicacion: {
         departamento: '',
         municipio: '',
+        direccion: '',
         latitud: null,
         longitud: null
       }
     };
     this.modoUbicacion = 'manual';
     this.errorUbicacion = null;
+    this.direccionResuelta = null;
     this.actualizarMarcadorManual();
   }
 
   cambiarModoUbicacion(modo: 'manual' | 'automatica'): void {
     if (modo === this.modoUbicacion) return;
 
+    this.solicitudGeocodificacion?.abort();
+    this.buscandoDireccion = false;
     this.modoUbicacion = modo;
     this.errorUbicacion = null;
+    this.direccionResuelta = null;
+    this.nuevoReporte.ubicacion.direccion = '';
+    this.nuevoReporte.ubicacion.departamento = '';
+    this.nuevoReporte.ubicacion.municipio = '';
     this.nuevoReporte.ubicacion.latitud = null;
     this.nuevoReporte.ubicacion.longitud = null;
     this.actualizarMarcadorManual();
@@ -293,18 +330,97 @@ export class ReportsComponent implements OnInit {
   async setUbicacionActual(): Promise<void> {
     this.errorUbicacion = null;
     const coords = await this.obtenerUbicacionActual();
-    if (!coords) {
+    if (!coords || this.modoUbicacion !== 'automatica') {
       return;
     }
 
     this.nuevoReporte.ubicacion.latitud = coords.latitud;
     this.nuevoReporte.ubicacion.longitud = coords.longitud;
+    this.changeDetector.markForCheck();
+  }
+
+  private direccionResuelta: string | null = null;
+  private solicitudGeocodificacion?: AbortController;
+  buscandoDireccion = false;
+
+  async buscarDireccion(): Promise<void> {
+    const direccion = this.nuevoReporte.ubicacion.direccion.trim();
+    if (!direccion) {
+      this.errorUbicacion = 'Escribe una dirección antes de buscarla en el mapa.';
+      return;
+    }
+
+    await this.geocodificarDireccion(direccion);
+  }
+
+  private async geocodificarDireccion(direccion: string): Promise<boolean> {
+    if (this.direccionResuelta !== direccion) {
+      this.nuevoReporte.ubicacion.departamento = '';
+      this.nuevoReporte.ubicacion.municipio = '';
+      this.nuevoReporte.ubicacion.latitud = null;
+      this.nuevoReporte.ubicacion.longitud = null;
+    }
+    this.solicitudGeocodificacion?.abort();
+    const solicitud = new AbortController();
+    this.solicitudGeocodificacion = solicitud;
+    this.buscandoDireccion = true;
+    this.errorUbicacion = null;
+    this.changeDetector.markForCheck();
+
+    try {
+      const parametros = new URLSearchParams({
+        format: 'jsonv2',
+        addressdetails: '1',
+        limit: '1',
+        q: direccion
+      });
+      const respuesta = await fetch(`https://nominatim.openstreetmap.org/search?${parametros}`, {
+        headers: { 'Accept-Language': 'es' },
+        signal: solicitud.signal
+      });
+      if (!respuesta.ok) throw new Error('No se pudo consultar el servicio de direcciones.');
+
+      const resultados = await respuesta.json() as ResultadoGeocodificacion[];
+      const resultado = resultados[0];
+      if (!resultado) {
+        this.errorUbicacion = 'No encontramos esa dirección. Prueba con calle, número, municipio y departamento.';
+        return false;
+      }
+
+      const latitud = Number(resultado.lat);
+      const longitud = Number(resultado.lon);
+      if (!Number.isFinite(latitud) || !Number.isFinite(longitud)) {
+        this.errorUbicacion = 'La dirección no devolvió coordenadas válidas. Revisa la dirección e inténtalo de nuevo.';
+        return false;
+      }
+
+      this.nuevoReporte.ubicacion.latitud = latitud;
+      this.nuevoReporte.ubicacion.longitud = longitud;
+      this.nuevoReporte.ubicacion.direccion = direccion;
+      this.direccionResuelta = direccion;
+      this.completarAreaAdministrativa(resultado.address);
+      this.actualizarVistaMapa([latitud, longitud]);
+      if (!this.nuevoReporte.ubicacion.departamento || !this.nuevoReporte.ubicacion.municipio) {
+        this.errorUbicacion = 'No identificamos municipio y departamento. Añádelos a la dirección y vuelve a ubicarla.';
+        return false;
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return false;
+      this.errorUbicacion = 'No se pudo buscar la dirección. Comprueba tu conexión e inténtalo de nuevo.';
+      return false;
+    } finally {
+      if (this.solicitudGeocodificacion === solicitud) {
+        this.buscandoDireccion = false;
+        this.changeDetector.markForCheck();
+      }
+    }
   }
 
   obtenerUbicacionActual(): Promise<{ latitud: number; longitud: number } | null> {
     return new Promise((resolve) => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        this.errorUbicacion = 'Este navegador no ofrece geolocalización. Puedes ingresar la ubicación manualmente.';
+        this.errorUbicacion = 'Este navegador no ofrece geolocalización. Puedes escribir una dirección exacta.';
         resolve(null);
         return;
       }
@@ -318,11 +434,11 @@ export class ReportsComponent implements OnInit {
         },
         (error) => {
           if (error.code === error.PERMISSION_DENIED) {
-            this.errorUbicacion = 'Se denegó el permiso de ubicación. Puedes ingresar las coordenadas manualmente.';
+            this.errorUbicacion = 'Se denegó el permiso de ubicación. Puedes escribir una dirección exacta.';
           } else if (error.code === error.TIMEOUT) {
-            this.errorUbicacion = 'La ubicación tardó demasiado en obtenerse. Inténtalo de nuevo o ingrésala manualmente.';
+            this.errorUbicacion = 'La ubicación tardó demasiado en obtenerse. Inténtalo de nuevo o escribe una dirección.';
           } else {
-            this.errorUbicacion = 'No fue posible obtener la ubicación del dispositivo. Puedes ingresarla manualmente.';
+            this.errorUbicacion = 'No fue posible obtener la ubicación del dispositivo. Puedes escribir una dirección.';
           }
           resolve(null);
         },
@@ -355,11 +471,11 @@ export class ReportsComponent implements OnInit {
 
     this.marcadorUbicacion = L.marker(centro, { draggable: true }).addTo(this.mapaUbicacion);
     this.mapaUbicacion.on('click', (evento: L.LeafletMouseEvent) => {
-      this.establecerCoordenadasManuales(evento.latlng.lat, evento.latlng.lng);
+      void this.establecerCoordenadasManuales(evento.latlng.lat, evento.latlng.lng);
     });
     this.marcadorUbicacion.on('dragend', () => {
       const posicion = this.marcadorUbicacion?.getLatLng();
-      if (posicion) this.establecerCoordenadasManuales(posicion.lat, posicion.lng);
+      if (posicion) void this.establecerCoordenadasManuales(posicion.lat, posicion.lng);
     });
 
     setTimeout(() => this.mapaUbicacion?.invalidateSize(), 0);
@@ -374,10 +490,66 @@ export class ReportsComponent implements OnInit {
     return [latitud, longitud];
   }
 
-  private establecerCoordenadasManuales(latitud: number, longitud: number): void {
+  private actualizarVistaMapa(coordenadas: L.LatLngTuple): void {
+    this.marcadorUbicacion?.setLatLng(coordenadas);
+    this.mapaUbicacion?.setView(coordenadas, 16, { animate: false });
+  }
+
+  private completarAreaAdministrativa(direccion?: Record<string, string>): void {
+    if (!direccion) return;
+    this.nuevoReporte.ubicacion.departamento = direccion['state'] || direccion['region'] || direccion['province'] ||
+      direccion['state_district'] || this.nuevoReporte.ubicacion.departamento;
+    this.nuevoReporte.ubicacion.municipio = direccion['city'] || direccion['town'] || direccion['village'] ||
+      direccion['municipality'] || direccion['county'] || this.nuevoReporte.ubicacion.municipio;
+  }
+
+  private async establecerCoordenadasManuales(latitud: number, longitud: number): Promise<void> {
     this.nuevoReporte.ubicacion.latitud = Number(latitud.toFixed(6));
     this.nuevoReporte.ubicacion.longitud = Number(longitud.toFixed(6));
+    this.nuevoReporte.ubicacion.direccion = '';
+    this.nuevoReporte.ubicacion.departamento = '';
+    this.nuevoReporte.ubicacion.municipio = '';
+    this.direccionResuelta = null;
     this.marcadorUbicacion?.setLatLng([latitud, longitud]);
+    this.buscandoDireccion = true;
+    this.errorUbicacion = null;
+
+    try {
+      this.solicitudGeocodificacion?.abort();
+      const solicitud = new AbortController();
+      this.solicitudGeocodificacion = solicitud;
+      const parametros = new URLSearchParams({
+        format: 'jsonv2',
+        addressdetails: '1',
+        lon: String(longitud)
+      });
+      parametros.set('lat', String(latitud));
+      const respuesta = await fetch(`https://nominatim.openstreetmap.org/reverse?${parametros}`, {
+        headers: { 'Accept-Language': 'es' },
+        signal: solicitud.signal
+      });
+      if (!respuesta.ok) throw new Error('No se pudo consultar la dirección del punto.');
+
+      const resultado = await respuesta.json() as ResultadoGeocodificacion;
+      if (!resultado.display_name) {
+        this.errorUbicacion = 'No encontramos una dirección para este punto. Escribe una dirección manualmente.';
+        return;
+      }
+
+      this.nuevoReporte.ubicacion.direccion = resultado.display_name;
+      this.direccionResuelta = resultado.display_name;
+      this.completarAreaAdministrativa(resultado.address);
+      if (!this.nuevoReporte.ubicacion.departamento || !this.nuevoReporte.ubicacion.municipio) {
+        this.errorUbicacion = 'No identificamos municipio y departamento para este punto. Escribe una dirección más completa.';
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        this.errorUbicacion = 'No se pudo obtener la dirección de este punto. También puedes escribirla manualmente.';
+      }
+    } finally {
+      this.buscandoDireccion = false;
+      this.changeDetector.markForCheck();
+    }
   }
 
   getBadgeClass(estado?: string): string {

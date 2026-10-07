@@ -46,7 +46,7 @@
           <label class="location-option" [class.selected]="modoUbicacion === 'manual'">
             <input type="radio" name="modoUbicacion" value="manual" [ngModel]="modoUbicacion"
               (ngModelChange)="cambiarModoUbicacion($event)" />
-            <span><strong>Ubicación manual</strong><small>Coordenadas o selección en el mapa</small></span>
+            <span><strong>Dirección o mapa</strong><small>Escribe una dirección exacta o elige un punto</small></span>
           </label>
           <label class="location-option" [class.selected]="modoUbicacion === 'automatica'">
             <input type="radio" name="modoUbicacion" value="automatica" [ngModel]="modoUbicacion"
@@ -55,35 +55,36 @@
           </label>
         </div>
 
-        <div *ngIf="modoUbicacion === 'manual'" class="form-row location-coordinates">
+        <div *ngIf="modoUbicacion === 'manual'" class="address-lookup">
           <div class="form-group">
-            <label for="latitud">Latitud *</label>
-            <input type="number" step="any" min="-90" max="90" id="latitud" name="latitud"
-              class="form-control" placeholder="Ej. 14.6349" [(ngModel)]="nuevoReporte.ubicacion.latitud"
-              (ngModelChange)="actualizarMarcadorManual()" required />
+            <label for="direccion">Dirección exacta *</label>
+            <input type="text" id="direccion" name="direccion" class="form-control"
+              autocomplete="street-address" placeholder="Calle, número, municipio y departamento"
+              [(ngModel)]="nuevoReporte.ubicacion.direccion" [disabled]="buscandoDireccion" required />
           </div>
-          <div class="form-group">
-            <label for="longitud">Longitud *</label>
-            <input type="number" step="any" min="-180" max="180" id="longitud" name="longitud"
-              class="form-control" placeholder="Ej. -90.5069" [(ngModel)]="nuevoReporte.ubicacion.longitud"
-              (ngModelChange)="actualizarMarcadorManual()" required />
-          </div>
+          <button type="button" class="btn btn-secondary address-button" (click)="buscarDireccion()"
+            [disabled]="buscandoDireccion || !nuevoReporte.ubicacion.direccion.trim()">
+            {{ buscandoDireccion ? 'Buscando dirección...' : 'Ubicar en el mapa' }}
+          </button>
         </div>
 
         <button *ngIf="modoUbicacion === 'automatica'" type="button" class="btn btn-secondary location-refresh"
           (click)="setUbicacionActual()">
           Obtener ubicación del dispositivo
         </button>
-        <p *ngIf="modoUbicacion === 'automatica' && errorUbicacion" class="helper-text location-error" role="status">
-          {{ errorUbicacion }} Cambia a ubicación manual para continuar sin geolocalización.
+        <p *ngIf="errorUbicacion" class="helper-text location-error" role="status" aria-live="polite">
+          {{ errorUbicacion }}
         </p>
 
         <div *ngIf="modoUbicacion === 'manual'" class="map-block">
           <div #locationMap class="location-map" aria-label="Mapa para seleccionar la ubicación del reporte"></div>
-          <p class="helper-text">Haz clic en el mapa o arrastra el marcador. Las coordenadas se actualizarán automáticamente.</p>
+          <p class="helper-text">Al ubicar la dirección, el marcador se coloca automáticamente. También puedes elegir un punto en el mapa.</p>
+          <p *ngIf="nuevoReporte.ubicacion.municipio && nuevoReporte.ubicacion.departamento" class="resolved-area">
+            {{ nuevoReporte.ubicacion.municipio }}, {{ nuevoReporte.ubicacion.departamento }}
+          </p>
         </div>
 
-        <div class="form-row">
+        <div *ngIf="modoUbicacion === 'automatica'" class="form-row">
           <div class="form-group">
             <label for="departamento">Departamento *</label>
             <input type="text" id="departamento" name="departamento" class="form-control"
@@ -115,7 +116,7 @@
 
       <div class="form-footer">
         <p class="helper-text">Los campos marcados con * son obligatorios.</p>
-        <button type="submit" class="btn btn-primary" [disabled]="guardandoReporte">
+        <button type="submit" class="btn btn-primary" [disabled]="guardandoReporte || buscandoDireccion">
           {{ guardandoReporte ? 'Publicando...' : 'Publicar reporte' }}
         </button>
         <small class="form-status" [class.status-error]="!!mensajeReporte && !guardandoReporte && mensajeReporte !== 'Reporte publicado correctamente.'"
@@ -199,7 +200,7 @@
       </div>
 
       <div class="report-actions">
-        <label>Cambiar estado:</label>
+        <span class="report-action-label">Cambiar estado</span>
         <select 
           class="form-control form-control-sm" 
           [disabled]="estadosGuardando[rep.id]"

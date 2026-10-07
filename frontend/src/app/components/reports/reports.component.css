@@ -245,8 +245,28 @@ form {
   line-height: 1.35;
 }
 
-.location-coordinates {
-  margin-top: 0;
+.address-lookup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.address-button {
+  width: auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.address-button:disabled {
+  cursor: wait;
+}
+
+.resolved-area {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .map-block {
@@ -454,9 +474,9 @@ form {
 }
 
 .report-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 200px);
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   margin-top: 0.9rem;
   padding-top: 0.8rem;
@@ -464,18 +484,20 @@ form {
 }
 
 .save-status {
-  flex: 1 0 100%;
+  grid-column: 1 / -1;
 }
 
-.report-actions label {
+.report-action-label {
+  min-width: 0;
+  white-space: nowrap;
   font-size: 0.8rem;
   color: var(--muted);
   font-weight: 600;
 }
 
 .report-actions select {
-  flex: 1;
-  max-width: 200px;
+  width: 100%;
+  min-width: 0;
   border: 1px solid #d8e0db;
   border-radius: 8px;
   background: #fff;
@@ -491,6 +513,14 @@ form {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .address-lookup {
+    grid-template-columns: 1fr;
+  }
+
+  .address-button {
+    width: 100%;
   }
 
   .section-heading h1 {
@@ -515,14 +545,21 @@ form {
     align-items: stretch;
   }
 
-  .report-header,
-  .report-actions {
+  .report-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
+  .report-actions {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .report-action-label {
+    white-space: normal;
+  }
+
   .report-actions select {
-    max-width: none;
     width: 100%;
   }
 }
